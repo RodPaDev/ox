@@ -1,11 +1,23 @@
+import * as readline from 'readline'
+
 import CPU from './CPU'
-import { Registers, logRegisterTable } from './Shared/Registers'
+
+import { DeviceRegisters } from './Shared/DeviceRegisters'
 
 const cpu = new CPU()
 
-cpu.LDI(Registers.R0, 4)
-cpu.LDI(Registers.R1, 3)
-cpu.ADD(Registers.R2, Registers.R0, Registers.R1)
-cpu.MUL(Registers.R0, Registers.R2, Registers.R2)
+readline.emitKeypressEvents(process.stdin)
 
-logRegisterTable(cpu.registers)
+// TODO: make a more elegant solution for this but for testing purposes this works
+if (process.stdin.isTTY) process.stdin.setRawMode(true)
+
+let metaEsc = false
+process.stdin.on('keypress', (chunk, key) => {
+  cpu.mmio.write(DeviceRegisters.KEYBOARD, key.sequence.charCodeAt(0))
+
+  // If the user presses Command + Escape, exit the virtual machine
+  if (key.meta && key.name === 'escape') {
+    metaEsc = true
+    process.exit()
+  }
+})
