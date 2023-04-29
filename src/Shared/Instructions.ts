@@ -25,7 +25,9 @@ export const Instructions = {
   POP: 0x18, // Pop
   MOV: 0x19, // Move
   NOP: 0x1a, // No Operation
-  HLT: 0x1b // Halt
+  HLT: 0x1b, // Halt,
+  IN: 0x1c, // Input
+  OUT: 0x1d // Output
 }
 
 export type Rdest = number
