@@ -1,3 +1,4 @@
+import { MemoryRegions } from '../CPU/Memory'
 import { Instructions } from '../Shared/Instructions'
 import { Registers } from '../Shared/Registers'
 
@@ -65,7 +66,146 @@ const ValidMnemonics = Object.keys(Instructions)
 const ValidRegisters = Object.keys(Registers)
 const ValidDirectives = ['.data', '.asciiz', '.org']
 
-export function assemble(source: string) {}
+export function assemble(source: string) {
+  const tokens = tokenize(source)
+
+  const symbolTable = firstPass(tokens)
+
+  // second pass
+
+  console.log(symbolTable)
+}
+
+export function firstPass(tokens: Array<any>) {
+  const symbolTable = new Map<string, number>()
+
+  let currentAddress = 0
+  let tokenIndex = 0
+  while (tokenIndex < tokens.length) {
+    const token = tokens[tokenIndex]
+
+    if (token === null) {
+      // End of line
+      tokenIndex++
+      continue
+    }
+
+    if (token.type === 'LABEL') {
+      const label = token.value.slice(0, -1) // Remove ':' from label
+      symbolTable.set(label, currentAddress)
+    } else if (token.type === 'DIRECTIVE') {
+      if (token.value === '.data') {
+        // Skip to next line
+        tokenIndex += 1
+        continue
+      } else if (token.value === '.org') {
+        // Get the next token
+        const nextToken = tokens[tokenIndex + 1]
+
+        if (!nextToken) {
+          throw new Error(
+            `Expected a value after '.org' directive at line: ${token.value}`
+          )
+        }
+
+        if (nextToken.type !== 'HEX_VALUE' && nextToken.type !== 'DEC_VALUE') {
+          throw new Error(
+            `Expected a hexadecimal or decimal value after '.org' directive at line: ${token.value}`
+          )
+        }
+
+        currentAddress = parseInt(nextToken.value)
+      }
+    } else {
+      currentAddress += 1
+    }
+
+    tokenIndex += 1
+  }
+
+  return symbolTable
+}
+
+export function secondPass(
+  tokens: Array<any>,
+  symbolTable: Map<string, number>
+) {
+  const machineCode = []
+
+  let tokenIndex = 0
+  while (tokenIndex < tokens.length) {
+    const token = tokens[tokenIndex]
+
+    if (token === null) {
+      // End of line
+      tokenIndex++
+      continue
+    }
+
+    switch (token.type) {
+      case 'MNEMONIC':
+        // Generate the machine code for the mnemonic and its operands
+        // Use the symbolTable to resolve label references
+        // If the mnemonic is a branch instruction then calculate the offset
+        // If the mnemonic is a jump instruction then calculate the address
+        // If the mnemonic is not found then throw an error
+        break
+
+      case 'LABEL':
+        // Skip labels, as they are already handled in the first pass
+        break
+
+      case 'LABEL_REF':
+        // Get the address from the symbol table corresponding to the label reference
+        break
+
+      case 'DIRECTIVE':
+        // Handle each directive individually
+        // For .data, store the value in memory
+        // For .org, set the current address
+        // For .asciiz, allocate space in memory for the string, and store each character's ASCII value
+        break
+
+      case 'REGISTER':
+        // Map the register to its binary value or corresponding register number
+        break
+
+      case 'IMMEDIATE':
+        // Handle immediate values
+        // If the immediate value is larger than the maximum allowed size (e.g., 8 bits), throw an error
+        // If the immediate value is negative, handle it accordingly (e.g., using two's complement)
+        break
+
+      case 'HEX_VALUE':
+        // Handle hexadecimal values by converting them to their corresponding binary or decimal values
+        break
+
+      case 'DEC_VALUE':
+        // Handle decimal values by converting them to their corresponding binary values
+        break
+
+      case 'COMMA':
+        // Ignore commas, as they are only used as separators between operands
+        break
+
+      case 'STRING':
+        // Handle strings by splitting the string into characters and storing each character's ASCII value in memory
+        break
+
+      case 'CHARACTER':
+        // Handle characters by storing the character's ASCII value in memory
+        break
+
+      default:
+        // Throw an error for unexpected token types
+        throw new Error(`Unexpected token type: ${token.type}`)
+    }
+
+    tokenIndex += 1
+  }
+
+  return machineCode
+}
 
 export function tokenize(source: string) {
   const tokens = []
@@ -128,5 +268,3 @@ export function tokenize(source: string) {
 
   return tokens
 }
-
-console.log(JSON.stringify(tokenize(exampleSource), null, 2))
