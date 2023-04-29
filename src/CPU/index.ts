@@ -3,15 +3,25 @@ import { Registers, logRegisterTable } from '../Shared/Registers'
 import { Address, Rdest, Rsrc, Immediate, Offset } from '../Shared/Instructions'
 import { Flags } from '../Shared/Flags'
 import { convertToSigned } from './utils'
+import { MMIO } from '../MMIO'
 
 export default class CPU {
   halted: boolean = false
   registers: Uint8Array
   memory: Memory
+  mmio: MMIO
+
+  // Cycle
+  private targetFPS = 60
+  private mhz = 8
+  private instructionsPerSecond = this.mhz * 1_000_000 // 8 MHz (8 million instructions per second)
+  private instructionsPerFrame = this.instructionsPerSecond / this.targetFPS
+  private delayBetweenInstructions = 1000 / this.instructionsPerSecond // 1 second / instructions per second
 
   constructor(rom: Uint8Array = new Uint8Array(0)) {
     this.registers = new Uint8Array(Object.keys(Registers).length)
     this.memory = new Memory(rom)
+    this.mmio = new MMIO(this.memory)
 
     // Initialize the stack pointer
     this.setReg(Registers.SP, MemoryRegions.Stack)
@@ -54,7 +64,15 @@ export default class CPU {
     Fetch-Decode-Execute Cycle
   */
 
-  run() {}
+  run() {
+    let instructionsExecuted = 0
+    while (!this.halted && instructionsExecuted < this.instructionsPerFrame) {
+      // this.execute()
+      instructionsExecuted += 1
+    }
+
+    setTimeout(() => this.run(), this.delayBetweenInstructions)
+  }
 
   fetch() {}
 
@@ -273,5 +291,15 @@ export default class CPU {
   }
   HLT() {
     this.halted = true
+  }
+
+  IN(rdest: Rdest, addr: Address) {
+    const value = this.mmio.read(addr)
+    this.setReg(rdest, value)
+  }
+
+  OUT(addr: Address, rsrc: Rsrc) {
+    const value = this.getReg(rsrc)
+    this.mmio.write(addr, value)
   }
 }
