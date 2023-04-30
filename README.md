@@ -36,8 +36,9 @@ The OitoBit virtual CPU uses a minimalistic instruction set that supports basic 
 | BNE      | 0x0e   | Branch if not equal: jump to an address in memory if two registers are not equal.                                                             | Rsrc1, Rsrc2, Offset |
 | BLT      | 0x0f   | Branch if less than: jump to an address in memory if one register is less than another.                                                       | Rsrc1, Rsrc2, Offset |
 | BGE      | 0x10   | Branch if greater than or equal: jump to an address in memory if one register is greater than or equal to another.                            | Rsrc1, Rsrc2, Offset |
-| CALL     | 0x11   | Call a subroutine at an absolute address in memory, and push the return address onto the stack.                                               | Address              |
-| RET      | 0x12   | Return from a subroutine by popping the return address from the stack and updating the program counter (PC) accordingly.                      | None                 |
+| BLE      | 0x11   | Branch if less than or equal: jump to an address in memory if one register is less than or equal to another.                                  | Rsrc1, Rsrc2, Offset |
+| BGT      | 0x12   | Branch if greater than: jump to an address in memory if one register is greater than another.                                                 | Rsrc1, Rsrc2, Offset |
+| RET      | 0x13   | Return from a subroutine by popping the return address from the stack and updating the program counter (PC) accordingly.                      | None                 |
 
 ## 1.4. Memory Instructions
 
@@ -49,13 +50,20 @@ The OitoBit virtual CPU uses a minimalistic instruction set that supports basic 
 | PUSH     | 0x17   | Push a value from a register onto the stack. | Rsrc             |
 | POP      | 0x18   | Pop a value from the stack into a register.  | Rdest            |
 
-1.5. Miscellaneous Instructions
+## 1.5. Miscellaneous Instructions
 
 | Mnemonic | Opcode | Description                                | Operands    |
 | -------- | ------ | ------------------------------------------ | ----------- |
 | MOV      | 0x19   | Move a value from one register to another. | Rdest, Rsrc |
 | NOP      | 0x1a   | No operation (do nothing).                 | None        |
 | HLT      | 0x1b   | Halt the CPU execution.                    | None        |
+
+## 1.6. I/O Instructions
+
+| Mnemonic | Opcode | Description                                                   | Operands             |
+| -------- | ------ | ------------------------------------------------------------- | -------------------- |
+| IN       | 0x1c   | Read a value from an input device and store it in a register. | Rdest, DeviceAddress |
+| OUT      | 0x1d   | Write a value from a register to an output device.            | Rsrc, DeviceAddress  |
 
 ## 2. Registers
 
