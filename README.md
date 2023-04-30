@@ -8,8 +8,6 @@ The goal of Oito Xenon is to give you a fun and interactive way to learn about t
 
 So, if you're ready to take a trip back in time and experience the joys of retro computing, fire up your browser and dive into Oito Xenon. Just be prepared to lose track of time, and possibly your sanity.
 
-Sure, here's another version of the specs section with the requested changes:
-
 ## Specs
 
 - 8MHz OitoArch 8-bit CPU, because who needs modern computing power when you can live in the past?
