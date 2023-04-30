@@ -10,6 +10,8 @@ import {
 export type Token = {
   type: string
   value: string
+  line: number
+  column: number
 }
 
 export type SymbolTable = Map<string, number>
@@ -25,8 +27,8 @@ export const OperandFormatToTokenType = {
 }
 
 export const TokenTypes = {
-  MNEMONIC: '[A-Z]+', // Uppercase alphabetic characters (e.g., ADD, MOV, JMP)
   REGISTER: '[Rr][0-9]+', // Registers (e.g., R0, R1, R2)
+  MNEMONIC: '[A-Z]+', // Uppercase alphabetic characters (e.g., ADD, MOV, JMP)
   IMMEDIATE: '#[0-9]+', // Immediate values (e.g., #42)
   LABEL: '[a-zA-Z0-9_]+:', // Labels (e.g., loop_start:)
   LABEL_REF: '[a-zA-Z0-9_]+', // Label references (e.g., loop_start) - should be the last type checked because other types can match this regex
