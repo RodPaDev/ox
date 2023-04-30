@@ -1,30 +1,32 @@
-import { TokenTypes } from "./types"
-
-type Token = {
-  type: string
-  value: string
-}
-
-type Tokens = Array<Token | null>
+import { TokenTypes, Tokens } from './types'
 
 export function Tokenizer(source: string): Tokens {
   const tokens = []
 
   const lines = source.split('\n')
 
-  for (let line of lines) {
+  const tokenRegexes = Object.entries(TokenTypes).map(
+    ([tokenType, tokenPattern]) => ({
+      tokenType,
+      regex: new RegExp('^' + tokenPattern)
+    })
+  )
+
+  let lineIndex = 0
+  while (lineIndex < lines.length) {
+    let line = lines[lineIndex]
     line = line.trim()
 
-    if (line.length === 0) continue
+    if (line.length === 0) {
+      lineIndex += 1
+      continue
+    }
 
     let position = 0
     while (position < line.length) {
       let foundToken = false
 
-      for (const tokenType in TokenTypes) {
-        const regex = new RegExp(
-          '^' + TokenTypes[tokenType as keyof typeof TokenTypes]
-        )
+      for (const { tokenType, regex } of tokenRegexes) {
         const match = line.slice(position).match(regex)
         if (match) {
           foundToken = true
@@ -32,7 +34,6 @@ export function Tokenizer(source: string): Tokens {
           if (tokenType === 'COMMENT') {
             // Break out of both loops when a comment is found
             position = line.length
-
             break
           }
 
@@ -43,7 +44,9 @@ export function Tokenizer(source: string): Tokens {
 
           tokens.push({
             type: tokenType,
-            value: token
+            value: token,
+            line: lineIndex,
+            column: position
           })
 
           position += token.length
@@ -64,6 +67,7 @@ export function Tokenizer(source: string): Tokens {
       }
     }
     tokens.push(null) // Add null token to indicate end of line
+    lineIndex += 1
   }
 
   return tokens
