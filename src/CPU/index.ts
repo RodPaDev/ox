@@ -1,5 +1,5 @@
 import { Memory, MemoryRegions } from './Memory'
-import { Registers, logRegisterTable } from '../Shared/Registers'
+import { Registers } from '../Shared/Registers'
 import { Addr, Rd, Rs, Imm, Ofst } from '../Shared/Instructions'
 import { Flags } from '../Shared/Flags'
 import { convertToSigned } from './utils'

@@ -1,10 +1,11 @@
 {
-  "parser": "@babel/eslint-parser",
-  "plugins": ["import"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["import", "@typescript-eslint"],
   "parserOptions": {
     "ecmaFeatures": {
       "modules": true
-    }
+    },
+    "sourceType": "module"
   },
   "env": {
     "browser": true,
@@ -22,7 +23,7 @@
     "no-extra-semi": 1,
     "no-underscore-dangle": 0,
     "no-console": 1,
-    "no-unused-vars": [
+    "@typescript-eslint/no-unused-vars": [
       1,
       {
         "argsIgnorePattern": "[parent|options]"

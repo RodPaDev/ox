@@ -1,43 +1,5 @@
 import { TokenTypes, Tokens } from './types'
-
-function createTokenList(line: string) {
-  const tokenList = []
-  let currentToken = ''
-  let inString = false
-  let inChar = false
-
-  for (let i = 0; i < line.length; i++) {
-    const currentChar = line[i]
-
-    if (currentChar === '"' && !inChar) {
-      inString = !inString
-      currentToken += currentChar
-    } else if (currentChar === "'" && !inString) {
-      inChar = !inChar
-      currentToken += currentChar
-    } else if (
-      (currentChar === ' ' || currentChar === ',') &&
-      !inString &&
-      !inChar
-    ) {
-      if (currentToken.length > 0) {
-        tokenList.push(currentToken)
-        currentToken = ''
-      }
-      if (currentChar === ',') {
-        tokenList.push(currentChar)
-      }
-    } else {
-      currentToken += currentChar
-    }
-  }
-
-  if (currentToken.length > 0) {
-    tokenList.push(currentToken)
-  }
-
-  return tokenList
-}
+import { createTokenList } from './utils'
 
 export function Tokenizer(source: string): Tokens {
   const tokens = []

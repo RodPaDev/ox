@@ -1,4 +1,4 @@
-import { IMemoryRegions, MemoryRegions } from '../CPU/Memory'
+import { IMemoryRegions } from '../CPU/Memory'
 import {
   AddrFormat,
   ImmFormat,
@@ -15,55 +15,11 @@ import {
   ValidDirectives,
   ValidRegisters
 } from './types'
-import { isTokenExpectedOperand, isValidAddress } from './utills'
-
-function getStatementFromTokens(tokens: Tokens, tokenIndex: number) {
-  // take the current position
-  // go backwards until you find a null token
-  // go forwards until you find a null token
-  // return the tokens in between
-  let start = tokenIndex
-  let end = tokenIndex
-
-  while (tokens[start] !== null) {
-    start -= 1
-  }
-
-  while (tokens[end] !== null) {
-    end += 1
-  }
-
-  return tokens.slice(start + 1, end)
-}
-
-function rebuildStatementFromTokens(tokens: Tokens, tokenIndex: number) {
-  const statement = getStatementFromTokens(tokens, tokenIndex)
-  return statement.map(token => token?.value || '').join(' ')
-}
-
-function buildExpected(instruction: string, operands: Array<string>) {
-  return `${instruction} ${operands.join(', ')}`
-}
-
-function createErrorMessage(
-  token: Token,
-  tokens: Tokens,
-  tokenIndex: number,
-  message: string,
-  operands: Array<string> = []
-) {
-  let errMsg = `Invalid operand: ${token.value} at [line: ${
-    token.line
-  }, column: ${token.column}]
-  Description: ${message}
-  Got: ${rebuildStatementFromTokens(tokens, tokenIndex)}
-  `
-  if (operands.length > 0) {
-    errMsg += `Expected: ${buildExpected(message, operands)}`
-  }
-
-  return errMsg
-}
+import {
+  isTokenExpectedOperand,
+  isValidAddress,
+  createErrorMessage
+} from './utils'
 
 export class CodeGenerator {
   symbolTable: Map<string, number>
@@ -123,7 +79,7 @@ export class CodeGenerator {
       )
     }
 
-    const { format, operands } = instruction
+    const { operands } = instruction
     const statementMachineCode = [instruction.opcode]
 
     let operandIndex = 0
