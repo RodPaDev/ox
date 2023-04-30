@@ -129,17 +129,18 @@ export class CodeGenerator {
     let operandIndex = 0
     while (operandIndex < operands.length) {
       const operand = operands[operandIndex]
-      const token = this.tokens[this.tokenIndex + operandIndex + 1]
+      let token = this.tokens[this.tokenIndex + operandIndex + 1]
+
+      if (token && token.type === 'COMMA') {
+        this.tokenIndex += 1
+        token = this.tokens[this.tokenIndex + operandIndex + 1]
+      }
 
       if (token === null) {
         // end of line - no more operands
         break
       }
 
-      if (token.value === 'COMMA') {
-        this.tokenIndex += 1
-        continue
-      }
       if (!isTokenExpectedOperand(token, operand)) {
         throw new Error(
           createErrorMessage(
@@ -297,12 +298,22 @@ export class CodeGenerator {
 
   handleRegister(token: Token, statementMachineCode: Array<number>) {
     if (!ValidRegisters.includes(token.value)) {
+      const isRegister = token.value[0].toUpperCase() === 'R'
+      let num = Number(token.value.slice(1))
+      const validRegisters = ' ' + ValidRegisters.join(', ')
+      let err = 'Invalid register. Valid registers are:'
+
+      // if is register and is number and number greater than 7 then throw error
+      if (isRegister && !isNaN(num) && num > 7) {
+        err = `Invalid Register. The register ${token.value} is out of range.`
+      }
+
       throw new Error(
         createErrorMessage(
           token,
           this.tokens,
           this.tokenIndex,
-          'Invalid register. Valid registers are: ' + ValidRegisters.join(', ')
+          err + validRegisters
         )
       )
     }
@@ -357,30 +368,22 @@ export class CodeGenerator {
     return numberValue
   }
 
-  handleString(token: Token) {
+  handleLiteral(token: Token) {
     const string = token.value.slice(1, -1) // Remove quotes from string
     for (const char of string) {
-      this.handleChar({ ...token, type: 'CHAR', value: char }, false, false) // Don't remove quotes, don't null terminate
+      this.machineCode.push(
+        Instructions.LDI.opcode,
+        Registers.R0,
+        char.charCodeAt(0)
+      )
+      this.machineCode.push(
+        Instructions.STR.opcode,
+        Registers.R0,
+        this.currentAddress
+      )
+      this.currentAddress += 1
     }
     this.machineCode.push(0) // Null terminate
-  }
-
-  handleChar(token: Token, removeQuotes = true, nullTerminated = true) {
-    const char = removeQuotes ? token.value.slice(1, -1) : token.value
-    this.machineCode.push(
-      Instructions.LDI.opcode,
-      Registers.R0,
-      char.charCodeAt(0)
-    )
-    this.machineCode.push(
-      Instructions.STR.opcode,
-      Registers.R0,
-      this.currentAddress
-    )
-    this.currentAddress += 1
-    if (nullTerminated) {
-      this.machineCode.push(0)
-    }
   }
 
   handleAsciiz(token: Token) {
@@ -389,7 +392,7 @@ export class CodeGenerator {
     // for each character in the string, a byte will be allocated
     // .asciiz "Hello World!"
     const string = token.value.slice(1, -1) // Remove quotes from string
-    this.handleString({ ...token, type: 'STRING', value: string })
+    this.handleLiteral({ ...token, type: 'LITERAL', value: string })
   }
 
   handleAllocInit(token: Token) {

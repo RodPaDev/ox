@@ -10,6 +10,9 @@ export function isTokenExpectedOperand(token: Token, operand: string) {
   if (token.type === 'LABEL_REF') {
     return operand === OfstFormat || operand === AddrFormat
   }
+  if (token.type === 'HEX_VALUE') {
+    return operand === AddrFormat
+  }
   return token.type === expectedTokenType
 }
 

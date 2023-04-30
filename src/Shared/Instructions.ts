@@ -179,7 +179,7 @@ export const Instructions = {
     format: InstructionFormats.Register,
     name: 'STR',
     description: 'Store a value from a register into memory.',
-    operands: [RdFormat, AddrFormat],
+    operands: [AddrFormat, RsFormat],
     opcode: 0x15
   },
   LDI: {

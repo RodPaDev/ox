@@ -1,36 +1,77 @@
 import { TokenTypes, Tokens } from './types'
 
+function createTokenList(line: string) {
+  const tokenList = []
+  let currentToken = ''
+  let inString = false
+  let inChar = false
+
+  for (let i = 0; i < line.length; i++) {
+    const currentChar = line[i]
+
+    if (currentChar === '"' && !inChar) {
+      inString = !inString
+      currentToken += currentChar
+    } else if (currentChar === "'" && !inString) {
+      inChar = !inChar
+      currentToken += currentChar
+    } else if (
+      (currentChar === ' ' || currentChar === ',') &&
+      !inString &&
+      !inChar
+    ) {
+      if (currentToken.length > 0) {
+        tokenList.push(currentToken)
+        currentToken = ''
+      }
+      if (currentChar === ',') {
+        tokenList.push(currentChar)
+      }
+    } else {
+      currentToken += currentChar
+    }
+  }
+
+  if (currentToken.length > 0) {
+    tokenList.push(currentToken)
+  }
+
+  return tokenList
+}
+
 export function Tokenizer(source: string): Tokens {
   const tokens = []
 
   const lines = source.split('\n')
-
-  const tokenRegexes = Object.entries(TokenTypes).map(
-    ([tokenType, tokenPattern]) => ({
-      tokenType,
-      regex: new RegExp('^' + tokenPattern)
-    })
-  )
 
   let lineIndex = 0
   while (lineIndex < lines.length) {
     let line = lines[lineIndex]
     line = line.trim()
 
-    if (line.length === 0) {
-      lineIndex += 1
-      continue
+    // Remove inline comments
+    const commentIndex = line.indexOf(';')
+    if (commentIndex !== -1) {
+      line = line.slice(0, commentIndex).trim()
     }
+    line = line.trim()
+
+    const tokenList = createTokenList(line)
 
     let position = 0
-    while (position < line.length) {
-      let foundToken = false
+    for (const token of tokenList) {
+      if (!token) {
+        position += 1
+        continue
+      }
 
-      for (const { tokenType, regex } of tokenRegexes) {
-        const match = line.slice(position).match(regex)
+      let foundToken = false
+      for (const { tokenType, regex } of TokenTypes) {
+        const match = token.match(regex)
+
         if (match) {
           foundToken = true
-          const token = match[0]
+
           if (tokenType === 'COMMENT') {
             // Break out of both loops when a comment is found
             position = line.length
@@ -42,31 +83,41 @@ export function Tokenizer(source: string): Tokens {
             continue
           }
 
+          const isImmediate = tokenType === 'IMMEDIATE'
+
           tokens.push({
             type: tokenType,
-            value: token,
+            value: isImmediate ? token.slice(1) : token,
             line: lineIndex,
             column: position
           })
 
-          position += token.length
           break
         }
       }
+      position += token.length
 
       if (!foundToken) {
-        // Check for decimal immediates without '#' symbol
         const decimalImmediateRegex = /^[0-9]+/
-        if (line.slice(position).match(decimalImmediateRegex)) {
+        if (token.match(decimalImmediateRegex)) {
+          const immediatePosition = line.indexOf(token)
           throw new Error(
-            `Invalid immediate value at line: ${line}. Use '#' symbol for immediates.`
+            `Invalid immediate value at [line: ${lineIndex}, column: ${position}]. Use '#' symbol for immediates.
+            Got: ${line}
+            Expected: ${line.slice(0, immediatePosition)}#${line.slice(
+              immediatePosition
+            )}
+            `
           )
         }
-
         throw new Error(`Invalid token at line: ${line}`)
       }
     }
-    tokens.push(null) // Add null token to indicate end of line
+
+    // if last token is null don't add a new null token
+    if (tokens.at(-1) !== null) {
+      tokens.push(null) // Add null token to indicate end of line
+    }
     lineIndex += 1
   }
 

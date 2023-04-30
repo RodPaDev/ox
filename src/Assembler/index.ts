@@ -1,14 +1,12 @@
 import { MemoryRegions } from '../CPU/Memory'
-import { Instructions } from '../Shared/Instructions'
-import { Registers } from '../Shared/Registers'
 import { CodeGenerator } from './CodeGenerator'
 import { SymbolResolver } from './SymbolResolver'
 import { Tokenizer } from './Tokenizer'
 
 const exampleSource = `
 ; Initialize registers
-LDI R1, 5
-LDI R2, 3
+LDI R1, #5
+LDI R2, #3
 
 ; Perform arithmetic operations
 ADD R3, R1, R2 ; R3 = R1 + R2
@@ -23,14 +21,14 @@ STR 0x102, R5 ; Store the multiplication result at address 0x102
 STR 0x103, R6 ; Store the division result at address 0x103
 
 ; Load values from memory into registers
-LDR R7, 0x100 ; R7 = Memory[0x100]
-LDR R8, 0x101 ; R8 = Memory[0x101]
+LDR R1, 0x100 ; R7 = Memory[0x100]
+LDR R2, 0x101 ; R8 = Memory[0x101]
 
 ; Check if R7 is equal to R8
-BEQ R7, R8, equal
+BEQ R1, R2, equal
 
 ; If not equal, jump to not_equal
-BNE R7, R8, not_equal
+BNE R1, R2, not_equal
 
 equal:
   ; Execute instructions for equal case
@@ -44,15 +42,17 @@ not_equal:
 end:
   HLT ; Halt the CPU
 
-string .asciiz "Hello, world!"
-string .asciiz 'O'
-
+.asciiz "Hello, world!"
+string: .asciiz 'O'
 `
 export function assemble(source: string) {
   const tokens = Tokenizer(source)
+
   const symbolTable = SymbolResolver(tokens)
   const codeGenerator = new CodeGenerator(symbolTable, tokens, MemoryRegions)
   const machineCode = codeGenerator.generate()
 
   return machineCode
 }
+
+console.log(assemble(exampleSource))
