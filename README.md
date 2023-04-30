@@ -58,7 +58,7 @@ OitoLang is the programming language you need for the OitoBit 8-bit virtual CPU.
 
 I decided to skip Object-Oriented Programming (OOP) just the thought of adding support for OOP makes me sweat like a nervous freshman on the first day of high school. OOP can be complicated and overwhelming, and frankly, I don't have the time or patience for it. 
 
-I prefer to stick with a functional and procedural programming paradigm that's easy to use and understand. So if you're looking for a programming language that will give you nightmares, look no further than OitoLang is no exception.
+I prefer to stick with a functional and procedural programming paradigm that's easy to use and understand. So if you're looking for a programming language that will give you nightmares, look no further because OitoLang is no exception.
 
 Whether you're a seasoned programmer or a clueless beginner, OitoLang is the perfect choice. It's easy to use, efficient, and designed specifically for the OitoBit 8-bit virtual CPU. So why bother with other programming languages that are clearly too advanced for you? Stick with OitoLang and let us do the thinking for you. You'll be glad you did.
 
