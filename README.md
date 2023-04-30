@@ -1,7 +1,5 @@
 # Oito Xenon - Faster than the Abacus
 
-## Introduction
-
 Do you miss the good old days when computing was simple, slow, and frustrating? Well, you're in luck, my friend! Oito Xenon is here to take you back to a time when software development was a hobby and CPUs were the size of a house.
 
 This retro-style computer system runs entirely in your browser, using the awesome power of JavaScript. With its 8-bit CPU, Oito Xenon is faster than your grandma's abacus, and can handle a wide range of basic computing tasks. Sure, it may not run Crysis, but who needs fancy modern games when you can spend hours debugging low-level assembly code?
