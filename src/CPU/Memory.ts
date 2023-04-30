@@ -1,3 +1,10 @@
+export interface IMemoryRegions {
+  ROM: number
+  RAM: number
+  Stack: number
+  IO: number
+}
+
 export const MemoryRegions = {
   ROM: 0x0000, // 0x0000 - 0x0fff (4KB)
   RAM: 0x1000, // 0x1000 - 0x7fff (28KB)
