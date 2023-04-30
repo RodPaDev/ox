@@ -8,9 +8,8 @@ import {
   RsFormat
 } from '../Shared/Instructions'
 import { Registers } from '../Shared/Registers'
-import { Token, ValidRegisters } from './types'
+import { SymbolTable, Token, Tokens, ValidRegisters } from './types'
 import { isTokenExpectedOperand, isValidAddress } from './utills'
-
 
 export class CodeGenerator {
   symbolTable: Map<string, number>
@@ -21,8 +20,8 @@ export class CodeGenerator {
   memoryRegions: IMemoryRegions
 
   constructor(
-    symbolTable: Map<string, number>,
-    tokens: Array<any>,
+    symbolTable: SymbolTable,
+    tokens: Tokens,
     memoryRegions: IMemoryRegions
   ) {
     this.symbolTable = symbolTable
@@ -30,7 +29,25 @@ export class CodeGenerator {
     this.memoryRegions = memoryRegions
   }
 
-  generate() {}
+  generate() {
+    while (this.tokenIndex < this.tokens.length) {
+      const token = this.tokens[this.tokenIndex]
+
+      if (token.type === 'LABEL') {
+        this.handleLabel()
+      } else if (token.type === 'LABEL_REF') {
+        this.handleLabelRef(token)
+      } else if (token.type === 'MNEMONIC') {
+        this.handleMnemonic(token)
+      } else if (token.type === 'DIRECTIVE') {
+        this.handleDirective(token)
+      }
+
+      this.tokenIndex += 1
+    }
+
+    return this.machineCode
+  }
 
   handleMnemonic(token: Token) {
     const instruction = Instructions[token.value as keyof typeof Instructions]
@@ -76,7 +93,7 @@ export class CodeGenerator {
       operandIndex += 1
     }
 
-    this.machineCode.concat(statementMachineCode)
+    this.machineCode.push(...statementMachineCode)
   }
 
   handleLabel() {
@@ -141,7 +158,26 @@ export class CodeGenerator {
     }
   }
 
-  handleDirective(token: Token) {}
+  handleDirective(token: Token) {
+    switch (token.value) {
+      case '.asciiz':
+        this.handleAsciiz(this.tokens[this.tokenIndex + 1])
+        break
+      case '.alloc_init':
+        this.handleAllocInit(this.tokens[this.tokenIndex + 1])
+        break
+      case '.space':
+        this.handleSpace(this.tokens[this.tokenIndex + 1])
+        break
+      case '.align':
+        this.handleAlign(this.tokens[this.tokenIndex + 1])
+        break
+      default:
+        // Todo - better error message
+        // Compile Error at [line: y, column: x] - {Statement/Line} - {Directive} is not supported
+        throw new Error(`Unsupported directive: ${token.value}`)
+    }
+  }
 
   handleRegister(token: Token, statementMachineCode: Array<number>) {
     if (!ValidRegisters.includes(token.value)) {
@@ -177,10 +213,6 @@ export class CodeGenerator {
     return numberValue
   }
 
-  handleDecimal() {
-    // Will maybe implement later if I decide to add support for decimal numbers
-  }
-
   handleString(token: Token) {
     const string = token.value.slice(1, -1) // Remove quotes from string
     for (const char of string) {
@@ -210,27 +242,76 @@ export class CodeGenerator {
   handleAsciiz(token: Token) {
     // Allocates a string in memory
     // The string will be null terminated
+    // for each character in the string, a byte will be allocated
     // .asciiz "Hello World!"
+    const string = token.value.slice(1, -1) // Remove quotes from string
+    this.handleString({ type: 'STRING', value: string })
   }
-  handleBytez(token: Token) {
-    // This is a custom directive
-    // It will take the size of bytes to allocate and the value to fill them with
-    // this is to simplify the process of allocating a value in memory
-    // instead of using .byte, .word, .dword, etc. there is only .bytez
-    // .bytez 4, 0x00 Allocates 4 bytes (32bits) and fills them with 0x00
-    // if the value exceeds the size of the allocated bytes, an error will be thrown
-    // if the value is smaller then the allocated bytes,
-    // the remaining bytes will be filled with 0 and a warning will be thrown
+
+  handleAllocInit(token: Token) {
+    const size = Number(token.value)
+    const valueToken = this.tokens[this.tokenIndex + 1]
+    const value =
+      valueToken.type === 'HEX'
+        ? this.handleHex(valueToken)
+        : Number(valueToken.value)
+
+    if (value > Math.pow(2, size * 8) - 1) {
+      throw new Error(
+        `Value ${valueToken.value} exceeds the size of allocated bytes: ${size}`
+      )
+    }
+
+    for (let i = 0; i < size; i++) {
+      this.machineCode.push(Instructions.LDI.opcode, Registers.R0, value)
+      this.machineCode.push(
+        Instructions.STR.opcode,
+        Registers.R0,
+        this.currentAddress
+      )
+      this.currentAddress += 1
+    }
+
+    this.tokenIndex += 1 // To account for the size and value tokens
   }
+
   handleSpace(token: Token) {
     // Allocates a specified number of bytes in memory
     // The bytes will be filled with 0
     // .space 4 Allocates 4 bytes (32bits) and fills them with 0
+    this.machineCode.push(Instructions.LDI.opcode, Registers.R0, 0)
+    let size = Number(token.value)
+    let i = 0
+    while (i < size) {
+      this.machineCode.push(
+        Instructions.STR.opcode,
+        Registers.R0,
+        this.currentAddress
+      )
+      this.currentAddress += 1
+      i += 1
+    }
   }
+
   handleAlign(token: Token) {
-    // Aligns the current address to the specified boundary (e.g., 4, 8, 16, etc.)
-    // If the current address is already aligned, nothing happens
-    // If the current address is not aligned, it will be aligned to the next boundary
-    // .align 4 Aligns the current address to the next 4 byte boundary
+    const boundary = Number(token.value)
+
+    if (boundary <= 0) {
+      throw new Error('Align boundary must be greater than 0')
+    }
+
+    const paddingSize = (boundary - (this.currentAddress % boundary)) % boundary
+
+    for (let i = 0; i < paddingSize; i++) {
+      this.machineCode.push(Instructions.LDI.opcode, Registers.R0, 0)
+      this.machineCode.push(
+        Instructions.STR.opcode,
+        Registers.R0,
+        this.currentAddress
+      )
+      this.currentAddress += 1
+    }
+
+    this.tokenIndex += 1 // To account for the boundary token
   }
 }
