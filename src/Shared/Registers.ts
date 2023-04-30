@@ -33,5 +33,3 @@ export const logRegisterTable = (registers: Uint8Array) => {
     FLAGS: registers[Registers.FLAGS]
   })
 }
-
-
