@@ -17,6 +17,14 @@ enum InstructionFormats {
   None = 'N'
 }
 
+export type InstructionDescription = {
+  format: InstructionFormats
+  name: string
+  description: string
+  operands: Array<string>
+  opcode: number
+}
+
 export const Instructions = {
   ADD: {
     format: InstructionFormats.Register,
