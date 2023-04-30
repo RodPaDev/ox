@@ -202,7 +202,7 @@ The firmware is the core software that manages the OitoBit virtual CPU's hardwar
 - Initializing and managing peripheral devices.
 - Providing basic I/O operations for devices such as display, keyboard, and gamepad.
 
-## 9.3. Minimal Shell OS
+## 9.3. Minimal Shell OS - Oito Operating Personal System (OOPS)
 
 The minimal shell OS is a lightweight operating system that offers basic functionality and essential programs for users. The shell OS can include the following features and programs:
 
