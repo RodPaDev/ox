@@ -26,9 +26,8 @@ The goal of Oito Xenon is to take you on a journey back in time to the era of 8-
 
 Whether you're a seasoned programmer looking to flex your low-level skills or a curious beginner interested in exploring the foundations of modern computing. I'm not finishing this sentence.
 
-From the bootloader to the kernel to the operating system and programming language, I've traded my sanity and recreated the full stack of an 8-bit computer system in your browser. With Oito Xenon, you'll have a chance to dive into the inner workings of a computer system and see how it all fits together. And who knows, you might even discover a newfound appreciation for modern computing (To be honest, I doubt it).
+From the bootloader to the kernel to the operating system and programming language, I've traded my sanity and recreated the full stack of an 8-bit computer system in your browser. With Oito Xenon, you'll have a chance to dive into the inner workings of a computer system and see how it all fits together. And who knows, you might even discover a newfound appreciation for modern computing (tbh, I doubt it).
 
-So strap in and get ready for a journey back in time to a world where computers were slow, programming was hard, and the threat of nuclear was the only thing that kept humanity going.
 
 ## Bootloader & Kernel
 
@@ -59,8 +58,6 @@ OitoLang is the programming language you need for the OitoBit 8-bit virtual CPU.
 I decided to skip Object-Oriented Programming (OOP) just the thought of adding support for OOP makes me sweat like a nervous freshman on the first day of high school. OOP can be complicated and overwhelming, and frankly, I don't have the time or patience for it. 
 
 I prefer to stick with a functional and procedural programming paradigm that's easy to use and understand. So if you're looking for a programming language that will give you nightmares, look no further because OitoLang is no exception.
-
-Whether you're a seasoned programmer or a clueless beginner, OitoLang is the perfect choice. It's easy to use, efficient, and designed specifically for the OitoBit 8-bit virtual CPU. So why bother with other programming languages that are clearly too advanced for you? Stick with OitoLang and let us do the thinking for you. You'll be glad you did.
 
 
 ## OitoTools
