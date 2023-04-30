@@ -1,6 +1,6 @@
 import { Memory, MemoryRegions } from './Memory'
 import { Registers, logRegisterTable } from '../Shared/Registers'
-import { Address, Rdest, Rsrc, Immediate, Offset } from '../Shared/Instructions'
+import { Addr, Rd, Rs, Imm, Ofst } from '../Shared/Instructions'
 import { Flags } from '../Shared/Flags'
 import { convertToSigned } from './utils'
 import { MMIO } from '../MMIO'
@@ -44,12 +44,12 @@ export default class CPU {
     return this.registers[register]
   }
 
-  setReg(register: number, value: number) {
-    this.registers[register] = value
+  setReg(register: number, regVal: number) {
+    this.registers[register] = regVal
   }
 
-  setFlag(flag: number, value: boolean) {
-    if (value) {
+  setFlag(flag: number, flagVal: boolean) {
+    if (flagVal) {
       this.registers[Registers.FLAGS] |= flag
     } else {
       this.registers[Registers.FLAGS] &= ~flag
@@ -84,12 +84,12 @@ export default class CPU {
     Instructions
   */
 
-  ADD(rdest: Rdest, rsrc1: Rsrc, rsrc2: Rsrc) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  ADD(rd: Rd, rs1: Rs, rs2: Rs) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
     const sum = srcVal1 + srcVal2
 
-    this.setReg(rdest, sum & 0xff)
+    this.setReg(rd, sum & 0xff)
 
     const carry = sum > 0xff
     this.setFlag(Flags.CF, carry)
@@ -106,12 +106,12 @@ export default class CPU {
 
     this.setFlag(Flags.OF, overflow)
   }
-  SUB(rdest: Rdest, rsrc1: Rsrc, rsrc2: Rsrc) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  SUB(rd: Rd, rs1: Rs, rs2: Rs) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
     const result = srcVal1 - srcVal2
 
-    this.setReg(rdest, result & 0xff)
+    this.setReg(rd, result & 0xff)
 
     const carry = srcVal1 < srcVal2
     this.setFlag(Flags.CF, carry)
@@ -128,12 +128,12 @@ export default class CPU {
     this.setFlag(Flags.OF, overflow)
   }
 
-  MUL(rdest: Rdest, rsrc1: Rsrc, rsrc2: Rsrc) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  MUL(rd: Rd, rs1: Rs, rs2: Rs) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
     const result = srcVal1 * srcVal2
 
-    this.setReg(rdest, result & 0xff)
+    this.setReg(rd, result & 0xff)
 
     const carry = result > 0xff
     this.setFlag(Flags.CF, carry)
@@ -146,12 +146,12 @@ export default class CPU {
     this.setFlag(Flags.OF, overflow)
   }
 
-  DIV(rdest: Rdest, rsrc1: Rsrc, rsrc2: Rsrc) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  DIV(rd: Rd, rs1: Rs, rs2: Rs) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
     const result = srcVal1 / srcVal2
 
-    this.setReg(rdest, result & 0xff)
+    this.setReg(rd, result & 0xff)
 
     const carry = false // Division doesn't have a carry flag
     this.setFlag(Flags.CF, carry)
@@ -163,47 +163,47 @@ export default class CPU {
     this.setFlag(Flags.OF, overflow)
   }
 
-  AND(rdest: Rdest, rsrc1: Rsrc, rsrc2: Rsrc) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  AND(rd: Rd, rs1: Rs, rs2: Rs) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
     const result = srcVal1 & srcVal2
 
-    this.setReg(rdest, result)
+    this.setReg(rd, result)
   }
-  OR(rdest: Rdest, rsrc1: Rsrc, rsrc2: Rsrc) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  OR(rd: Rd, rs1: Rs, rs2: Rs) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
     const result = srcVal1 | srcVal2
 
-    this.setReg(rdest, result)
+    this.setReg(rd, result)
   }
-  XOR(rdest: Rdest, rsrc1: Rsrc, rsrc2: Rsrc) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  XOR(rd: Rd, rs1: Rs, rs2: Rs) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
     const result = srcVal1 ^ srcVal2
 
-    this.setReg(rdest, result)
+    this.setReg(rd, result)
   }
-  NOT(rdest: Rdest, rsrc: Rsrc) {
-    const srcVal = this.getReg(rsrc)
+  NOT(rd: Rd, rs: Rs) {
+    const srcVal = this.getReg(rs)
     const result = ~srcVal
 
-    this.setReg(rdest, result)
+    this.setReg(rd, result)
   }
-  SHL(rdest: Rdest, rsrc: Rsrc, value: Immediate) {
-    const srcVal = this.getReg(rsrc)
-    const result = srcVal << value
+  SHL(rd: Rd, rs: Rs, imm: Imm) {
+    const srcVal = this.getReg(rs)
+    const result = srcVal << imm
 
-    this.setReg(rdest, result)
+    this.setReg(rd, result)
   }
-  SHR(rdest: Rdest, rsrc: Rsrc, value: Immediate) {
-    const srcVal = this.getReg(rsrc)
-    const result = srcVal >> value
+  SHR(rd: Rd, rs: Rs, imm: Imm) {
+    const srcVal = this.getReg(rs)
+    const result = srcVal >> imm
 
-    this.setReg(rdest, result)
+    this.setReg(rd, result)
   }
-  JAL(rdest: Rdest, addr: Address) {
-    this.setReg(rdest, this.getReg(Registers.PC) + 1)
+  JAL(rd: Rd, addr: Addr) {
+    this.setReg(rd, this.getReg(Registers.PC) + 1)
 
     // Push return address onto the stack
     const sp = this.getReg(Registers.SP)
@@ -214,8 +214,8 @@ export default class CPU {
     this.setReg(Registers.PC, addr)
   }
 
-  JALR(rdest: Rdest, rsrc: Rsrc) {
-    this.setReg(rdest, this.getReg(Registers.PC) + 1)
+  JALR(rd: Rd, rs: Rs) {
+    this.setReg(rd, this.getReg(Registers.PC) + 1)
 
     // Push return address onto the stack
     const sp = this.getReg(Registers.SP)
@@ -223,39 +223,39 @@ export default class CPU {
     this.setReg(Registers.SP, sp + 1)
 
     // Jump to the target address from the source register
-    const addr = this.getReg(rsrc)
+    const addr = this.getReg(rs)
     this.setReg(Registers.PC, addr)
   }
-  BEQ(rsrc1: Rsrc, rsrc2: Rsrc, offset: Offset) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  BEQ(rs1: Rs, rs2: Rs, ofst: Ofst) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
 
     if (srcVal1 === srcVal2) {
-      this.setReg(Registers.PC, this.getReg(Registers.PC) + offset)
+      this.setReg(Registers.PC, this.getReg(Registers.PC) + ofst)
     }
   }
-  BNE(rsrc1: Rsrc, rsrc2: Rsrc, offset: Offset) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  BNE(rs1: Rs, rs2: Rs, ofst: Ofst) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
 
     if (srcVal1 !== srcVal2) {
-      this.setReg(Registers.PC, this.getReg(Registers.PC) + offset)
+      this.setReg(Registers.PC, this.getReg(Registers.PC) + ofst)
     }
   }
-  BLT(rsrc1: Rsrc, rsrc2: Rsrc, offset: Offset) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  BLT(rs1: Rs, rs2: Rs, ofst: Ofst) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
 
     if (srcVal1 < srcVal2) {
-      this.setReg(Registers.PC, this.getReg(Registers.PC) + offset)
+      this.setReg(Registers.PC, this.getReg(Registers.PC) + ofst)
     }
   }
-  BGE(rsrc1: Rsrc, rsrc2: Rsrc, offset: Offset) {
-    const srcVal1 = this.getReg(rsrc1)
-    const srcVal2 = this.getReg(rsrc2)
+  BGE(rs1: Rs, rs2: Rs, ofst: Ofst) {
+    const srcVal1 = this.getReg(rs1)
+    const srcVal2 = this.getReg(rs2)
 
     if (srcVal1 >= srcVal2) {
-      this.setReg(Registers.PC, this.getReg(Registers.PC) + offset)
+      this.setReg(Registers.PC, this.getReg(Registers.PC) + ofst)
     }
   }
   RET() {
@@ -263,28 +263,28 @@ export default class CPU {
     this.setReg(Registers.SP, this.getReg(Registers.SP) + 1) // Increment the stack pointer
     this.setReg(Registers.PC, returnAddress) // Set PC to the return address
   }
-  LDR(rdest: Rdest, addr: Address) {
-    this.setReg(rdest, this.memory.read(addr))
+  LDR(rd: Rd, addr: Addr) {
+    this.setReg(rd, this.memory.read(addr))
   }
-  STR(addr: Address, rsrc: Rsrc) {
-    this.memory.write(addr, this.getReg(rsrc))
+  STR(addr: Addr, rs: Rs) {
+    this.memory.write(addr, this.getReg(rs))
   }
-  LDI(rdest: Rdest, immediate: Immediate) {
-    this.setReg(rdest, immediate)
+  LDI(rd: Rd, immediate: Imm) {
+    this.setReg(rd, immediate)
   }
-  PUSH(rsrc: Rsrc) {
+  PUSH(rs: Rs) {
     const sp = this.getReg(Registers.SP)
-    this.memory.write(sp, this.getReg(rsrc))
+    this.memory.write(sp, this.getReg(rs))
     this.setReg(Registers.SP, sp - 1)
   }
-  POP(rdest: Rdest) {
+  POP(rd: Rd) {
     const sp = this.getReg(Registers.SP)
     this.setReg(Registers.SP, sp + 1)
-    this.setReg(rdest, this.memory.read(sp))
+    this.setReg(rd, this.memory.read(sp))
   }
-  MOV(rdest: Rdest, rsrc: Rsrc) {
-    const srcVal = this.getReg(rsrc)
-    this.setReg(rdest, srcVal)
+  MOV(rd: Rd, rs: Rs) {
+    const srcVal = this.getReg(rs)
+    this.setReg(rd, srcVal)
   }
   NOP() {
     // do nothing
@@ -293,13 +293,13 @@ export default class CPU {
     this.halted = true
   }
 
-  IN(rdest: Rdest, addr: Address) {
+  IN(rd: Rd, addr: Addr) {
     const value = this.mmio.read(addr)
-    this.setReg(rdest, value)
+    this.setReg(rd, value)
   }
 
-  OUT(addr: Address, rsrc: Rsrc) {
-    const value = this.getReg(rsrc)
+  OUT(addr: Addr, rs: Rs) {
+    const value = this.getReg(rs)
     this.mmio.write(addr, value)
   }
 }
