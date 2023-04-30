@@ -8,8 +8,62 @@ import {
   RsFormat
 } from '../Shared/Instructions'
 import { Registers } from '../Shared/Registers'
-import { SymbolTable, Token, Tokens, ValidRegisters } from './types'
+import {
+  SymbolTable,
+  Token,
+  Tokens,
+  ValidDirectives,
+  ValidRegisters
+} from './types'
 import { isTokenExpectedOperand, isValidAddress } from './utills'
+
+function getStatementFromTokens(tokens: Tokens, tokenIndex: number) {
+  // take the current position
+  // go backwards until you find a null token
+  // go forwards until you find a null token
+  // return the tokens in between
+  let start = tokenIndex
+  let end = tokenIndex
+
+  while (tokens[start] !== null) {
+    start -= 1
+  }
+
+  while (tokens[end] !== null) {
+    end += 1
+  }
+
+  return tokens.slice(start + 1, end)
+}
+
+function rebuildStatementFromTokens(tokens: Tokens, tokenIndex: number) {
+  const statement = getStatementFromTokens(tokens, tokenIndex)
+  return statement.map(token => token?.value || '').join(' ')
+}
+
+function buildExpected(instruction: string, operands: Array<string>) {
+  return `${instruction} ${operands.join(', ')}`
+}
+
+function createErrorMessage(
+  token: Token,
+  tokens: Tokens,
+  tokenIndex: number,
+  message: string,
+  operands: Array<string> = []
+) {
+  let errMsg = `Invalid operand: ${token.value} at [line: ${
+    token.line
+  }, column: ${token.column}]
+  Description: ${message}
+  Got: ${rebuildStatementFromTokens(tokens, tokenIndex)}
+  `
+  if (operands.length > 0) {
+    errMsg += `Expected: ${buildExpected(message, operands)}`
+  }
+
+  return errMsg
+}
 
 export class CodeGenerator {
   symbolTable: Map<string, number>
@@ -33,6 +87,11 @@ export class CodeGenerator {
     while (this.tokenIndex < this.tokens.length) {
       const token = this.tokens[this.tokenIndex]
 
+      if (token === null) {
+        this.tokenIndex += 1
+        continue
+      }
+
       if (token.type === 'LABEL') {
         this.handleLabel()
       } else if (token.type === 'LABEL_REF') {
@@ -52,7 +111,16 @@ export class CodeGenerator {
   handleMnemonic(token: Token) {
     const instruction = Instructions[token.value as keyof typeof Instructions]
     if (!instruction) {
-      throw new Error(`Invalid mnemonic: ${token.value}`)
+      throw new Error(
+        createErrorMessage(
+          token,
+          this.tokens,
+          this.tokenIndex,
+          `Invalid instruction. Supported instructions ${Object.keys(
+            Instructions
+          )}`
+        )
+      )
     }
 
     const { format, operands } = instruction
@@ -73,10 +141,14 @@ export class CodeGenerator {
         continue
       }
       if (!isTokenExpectedOperand(token, operand)) {
-        // Todo - better error message
-        // Compile Error at [line: y, column: x] - {Statement/Line} - {Instruction Description} - Operands should be {operand1}, {operand2}, {operand3}
         throw new Error(
-          `Instruction format should be ${instruction.description} `
+          createErrorMessage(
+            token,
+            this.tokens,
+            this.tokenIndex,
+            instruction.description,
+            operands
+          )
         )
       }
 
@@ -108,7 +180,14 @@ export class CodeGenerator {
     const address = this.symbolTable.get(label)
 
     if (address === undefined) {
-      throw new Error(`Label not found: ${label}`)
+      throw new Error(
+        createErrorMessage(
+          token,
+          this.tokens,
+          this.tokenIndex,
+          'Label Reference not found. Did you forget to define it?'
+        )
+      )
     }
 
     this.machineCode.push(address)
@@ -120,7 +199,14 @@ export class CodeGenerator {
     if (token.type === 'LABEL_REF') {
       const symbol = this.symbolTable.get(token.value)
       if (symbol === undefined) {
-        throw new Error(`Label not found: ${token.value}`)
+        throw new Error(
+          createErrorMessage(
+            token,
+            this.tokens,
+            this.tokenIndex,
+            'Label Reference not found. Did you forget to define it?'
+          )
+        )
       }
       address = symbol
     } else {
@@ -128,7 +214,14 @@ export class CodeGenerator {
     }
 
     if (!isValidAddress(address, this.memoryRegions)) {
-      throw new Error(`Invalid address: ${token.value}`)
+      throw new Error(
+        createErrorMessage(
+          token,
+          this.tokens,
+          this.tokenIndex,
+          'Address value out of range. Check your memory regions.'
+        )
+      )
     }
 
     statementMachineCode.push(address)
@@ -140,7 +233,14 @@ export class CodeGenerator {
     if (token.type === 'LABEL_REF') {
       const symbol = this.symbolTable.get(token.value)
       if (symbol === undefined) {
-        throw new Error(`Label not found: ${token.value}`)
+        throw new Error(
+          createErrorMessage(
+            token,
+            this.tokens,
+            this.tokenIndex,
+            'Label Reference not found. Did you forget to define it?'
+          )
+        )
       }
       offset = symbol - this.currentAddress
     } else {
@@ -148,7 +248,14 @@ export class CodeGenerator {
     }
 
     if (offset < -128 || offset > 127) {
-      throw new Error(`Offset value out of range: ${token.value}`)
+      throw new Error(
+        createErrorMessage(
+          token,
+          this.tokens,
+          this.tokenIndex,
+          'Offset value out of range. Must be between -128 and 127.'
+        )
+      )
     }
 
     if (offset >= 0) {
@@ -175,13 +282,29 @@ export class CodeGenerator {
       default:
         // Todo - better error message
         // Compile Error at [line: y, column: x] - {Statement/Line} - {Directive} is not supported
-        throw new Error(`Unsupported directive: ${token.value}`)
+        throw new Error(
+          createErrorMessage(
+            token,
+            this.tokens,
+            this.tokenIndex,
+            `Directive not supported. Supported directives are: ${ValidDirectives.join(
+              ', '
+            )}`
+          )
+        )
     }
   }
 
   handleRegister(token: Token, statementMachineCode: Array<number>) {
     if (!ValidRegisters.includes(token.value)) {
-      throw new Error(`Invalid register: ${token.value}`)
+      throw new Error(
+        createErrorMessage(
+          token,
+          this.tokens,
+          this.tokenIndex,
+          'Invalid register. Valid registers are: ' + ValidRegisters.join(', ')
+        )
+      )
     }
     statementMachineCode.push(Registers[token.value as keyof typeof Registers])
   }
@@ -189,7 +312,14 @@ export class CodeGenerator {
   handleImmediate(token: Token, statementMachineCode: Array<number>) {
     const immediate = Number(token.value)
     if (isNaN(immediate)) {
-      throw new Error(`Invalid immediate value: ${token.value}`)
+      throw new Error(
+        createErrorMessage(
+          token,
+          this.tokens,
+          this.tokenIndex,
+          'Invalid immediate value. Must be a number.'
+        )
+      )
     }
 
     if (immediate >= 0 && immediate <= 255) {
@@ -197,7 +327,14 @@ export class CodeGenerator {
     } else if (immediate < 0 && immediate >= -128) {
       statementMachineCode.push((immediate ^ 0xff) + 1)
     } else {
-      throw new Error(`Immediate value out of range: ${token.value}`)
+      throw new Error(
+        createErrorMessage(
+          token,
+          this.tokens,
+          this.tokenIndex,
+          'Immediate value out of range. Must be between -128 and 255.'
+        )
+      )
     }
   }
 
@@ -207,7 +344,14 @@ export class CodeGenerator {
     const numberValue = parseInt(hexValue, 16)
 
     if (isNaN(numberValue)) {
-      throw new Error(`Invalid hex value: ${token.value}`)
+      throw new Error(
+        createErrorMessage(
+          token,
+          this.tokens,
+          this.tokenIndex,
+          'Invalid hex value. Must be a valid hex string.'
+        )
+      )
     }
 
     return numberValue
@@ -216,7 +360,7 @@ export class CodeGenerator {
   handleString(token: Token) {
     const string = token.value.slice(1, -1) // Remove quotes from string
     for (const char of string) {
-      this.handleChar({ type: 'CHAR', value: char }, false, false) // Don't remove quotes, don't null terminate
+      this.handleChar({ ...token, type: 'CHAR', value: char }, false, false) // Don't remove quotes, don't null terminate
     }
     this.machineCode.push(0) // Null terminate
   }
@@ -245,7 +389,7 @@ export class CodeGenerator {
     // for each character in the string, a byte will be allocated
     // .asciiz "Hello World!"
     const string = token.value.slice(1, -1) // Remove quotes from string
-    this.handleString({ type: 'STRING', value: string })
+    this.handleString({ ...token, type: 'STRING', value: string })
   }
 
   handleAllocInit(token: Token) {
@@ -255,10 +399,15 @@ export class CodeGenerator {
       valueToken.type === 'HEX'
         ? this.handleHex(valueToken)
         : Number(valueToken.value)
-
-    if (value > Math.pow(2, size * 8) - 1) {
+    const maxValSize = Math.pow(2, size * 8) - 1
+    if (value > maxValSize) {
       throw new Error(
-        `Value ${valueToken.value} exceeds the size of allocated bytes: ${size}`
+        createErrorMessage(
+          token,
+          this.tokens,
+          this.tokenIndex,
+          `Value too large for specified size. Allocated: ${size} bytes. Max value: ${maxValSize}`
+        )
       )
     }
 
@@ -297,7 +446,14 @@ export class CodeGenerator {
     const boundary = Number(token.value)
 
     if (boundary <= 0) {
-      throw new Error('Align boundary must be greater than 0')
+      throw new Error(
+        createErrorMessage(
+          token,
+          this.tokens,
+          this.tokenIndex,
+          `Boundary ${boundary} must be greater than 0.`
+        )
+      )
     }
 
     const paddingSize = (boundary - (this.currentAddress % boundary)) % boundary
