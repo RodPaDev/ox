@@ -45,4 +45,4 @@ export const ValidMnemonics = Object.values(Instructions).map(
 )
 // Only General Purpose Registers are valid. Other registers are reserved for special purposes.
 export const ValidRegisters = ['R0', 'R1', 'R2', 'R3', 'R4', 'R5', 'R6', 'R7']
-export const ValidDirectives = ['.asciiz', '.bytez', '.space', '.align']
+export const ValidDirectives = ['.asciiz', '.alloc_init', '.space', '.align']
