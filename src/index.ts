@@ -1,10 +1,18 @@
 import * as readline from 'readline'
+import fs from 'fs'
 
 import CPU from './CPU'
 
 import { DeviceRegisters } from './Shared/DeviceRegisters'
+import { Registers } from './Shared/Registers'
 
-const cpu = new CPU()
+const buffer = fs.readFileSync('out.bin')
+
+// Create a new UINT8Array from the buffer
+const machineCode = new Uint8Array(buffer)
+
+const cpu = new CPU(machineCode)
+cpu.run()
 
 readline.emitKeypressEvents(process.stdin)
 
@@ -16,6 +24,17 @@ process.stdin.on('keypress', (chunk, key) => {
 
   // If the user presses Command + Escape, exit the virtual machine
   if (key.meta && key.name === 'escape') {
+
+    // eslint-disable-next-line no-console
+    console.table(
+      Object.keys(Registers).map(key => {
+        return {
+          name: key,
+          value: cpu.getReg(Registers[key as keyof typeof Registers])
+        }
+      })
+    )
+
     process.exit()
   }
 })
