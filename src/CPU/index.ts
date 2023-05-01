@@ -1,9 +1,23 @@
 import { Memory, MemoryRegions } from './Memory'
 import { Registers } from '../Shared/Registers'
-import { Addr, Rd, Rs, Imm, Ofst } from '../Shared/Instructions'
+import {
+  Addr,
+  Rd,
+  Rs,
+  Imm,
+  Ofst,
+
+  InstructionsByOpcode,
+  InstructionDescription
+} from '../Shared/Instructions'
 import { Flags } from '../Shared/Flags'
 import { convertToSigned } from './utils'
 import { MMIO } from '../MMIO'
+
+type DecodedInstruction = {
+  instruction: InstructionDescription
+  operands: Array<number>
+}
 
 export default class CPU {
   halted: boolean = false
@@ -16,7 +30,7 @@ export default class CPU {
   private mhz = 8
   private instructionsPerSecond = this.mhz * 1_000_000 // 8 MHz (8 million instructions per second)
   private instructionsPerFrame = this.instructionsPerSecond / this.targetFPS
-  private delayBetweenInstructions = 1000 / this.instructionsPerSecond // 1 second / instructions per second
+  private delayBetweenFrames = 1000 / this.targetFPS // 1 second / instructions per second
 
   constructor(rom: Uint8Array = new Uint8Array(0)) {
     this.registers = new Uint8Array(Object.keys(Registers).length)
@@ -67,18 +81,62 @@ export default class CPU {
   run() {
     let instructionsExecuted = 0
     while (!this.halted && instructionsExecuted < this.instructionsPerFrame) {
-      // this.execute()
+      this.fetch()
+      const decodedInstruction = this.decode()
+      if (decodedInstruction) {
+        this.execute(decodedInstruction)
+      }
       instructionsExecuted += 1
     }
 
-    setTimeout(() => this.run(), this.delayBetweenInstructions)
+    setTimeout(() => this.run(), this.delayBetweenFrames)
   }
 
-  fetch() {}
+  fetch() {
+    const pc = this.getReg(Registers.PC)
+    const instruction = this.memory.read(pc)
 
-  decode() {}
+    this.setReg(Registers.IR, instruction)
+    this.setReg(Registers.PC, pc + 1)
+  }
 
-  execute() {}
+  decode(): DecodedInstruction | null {
+    const opcode = this.getReg(Registers.IR)
+    const instructionInfo = InstructionsByOpcode.get(opcode)
+
+    if (opcode === 0x00) {
+      return null
+    }
+
+    if (instructionInfo === undefined) {
+      throw new Error(`Invalid opcode: ${opcode}`)
+    }
+
+    const pc = this.getReg(Registers.PC)
+    const operands = []
+    for (let i = 0; i < instructionInfo.operands.length; i++) {
+      operands.push(this.memory.read(pc + i))
+    }
+
+    this.setReg(Registers.PC, pc + instructionInfo.operands.length)
+
+    return {
+      instruction: instructionInfo,
+      operands: operands
+    }
+  }
+
+  execute(decodedInstruction: DecodedInstruction) {
+    const { instruction, operands } = decodedInstruction
+
+    // check if instruction.name is a method implemented in this class
+    if (this[instruction.name as keyof CPU]) {
+      // @ts-ignore
+      this[instruction.name as keyof CPU](...operands)
+    } else {
+      throw new Error(`Instruction not implemented: ${instruction.name}`)
+    }
+  }
 
   /*
     Instructions
