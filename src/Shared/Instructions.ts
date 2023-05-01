@@ -240,3 +240,15 @@ export const Instructions = {
     opcode: 0x1d
   }
 }
+
+// create a map of opcodes to instructions
+const createOpcodeMap = () => {
+  const map = new Map<number, InstructionDescription>()
+  for (const instruction in Instructions) {
+    const description = Instructions[instruction as keyof typeof Instructions]
+    map.set(description.opcode, description)
+  }
+  return map
+}
+
+export const InstructionsByOpcode = createOpcodeMap()
