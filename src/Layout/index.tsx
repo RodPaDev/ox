@@ -2,7 +2,7 @@ import { useState } from 'react'
 import './index.css'
 import clsx from 'clsx'
 
-export default function Layout() {
+export default function Layout({ children }: { children?: React.ReactNode }) {
   const [isExpanded, setIsExpanded] = useState(false)
 
   const toggleSidebar = () => {
@@ -13,7 +13,7 @@ export default function Layout() {
     <div className='container'>
       <div className='content'>
         <div className='top-bar'></div>
-        <div className='main-content'></div>
+        <div className='main-content'>{children}</div>
       </div>
       <div className={clsx('sidebar', isExpanded && 'expanded')}>
         <div className='sidebar-content'></div>
