@@ -1,28 +1,29 @@
-import { useState } from 'react'
-import './index.css'
-import clsx from 'clsx'
+import { ParentProps, createSignal } from 'solid-js'
 
-export default function Layout({ children }: { children?: React.ReactNode }) {
-  const [isExpanded, setIsExpanded] = useState(false)
+import TopBar from './TopBar'
+import LayoutContent from './Content'
+import Sidebar from './Sidebar'
+import SidebarInspector from './Sidebar/SidebarInspector'
+import SidebarIcons from './Sidebar/SidebarIcons'
+import './index.scss'
+
+export default function Layout(props: ParentProps) {
+  const [isExpanded, setIsExpanded] = createSignal(false)
 
   const toggleSidebar = () => {
-    setIsExpanded(isExpanded => !isExpanded)
+    setIsExpanded(!isExpanded())
   }
 
   return (
-    <div className='container'>
-      <div className='content'>
-        <div className='top-bar'></div>
-        <div className='main-content'>{children}</div>
+    <div class='Layout'>
+      <div class='Layout__Wrapper'>
+        <TopBar />
+        <LayoutContent>{props.children}</LayoutContent>
       </div>
-      <div className={clsx('sidebar', isExpanded && 'expanded')}>
-        <div className='sidebar-content'></div>
-        <div className='sidebar-buttons'>
-          <button className='sidebar-button' onClick={toggleSidebar}>
-            •••
-          </button>
-        </div>
-      </div>
+      <Sidebar>
+        <SidebarInspector />
+        <SidebarIcons />
+      </Sidebar>
     </div>
   )
 }

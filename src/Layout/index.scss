@@ -1,0 +1,46 @@
+.Layout {
+  background: linear-gradient(180deg, #001a28 0%, #1d062f 100%, #1c062f 100%);
+  height: 100vh;
+  width: 100%;
+
+  display: grid;
+  grid-template-areas: 'wrapper sidebar';
+  grid-template-columns: 1fr auto;
+
+  &__Wrapper {
+    grid-area: wrapper;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__Sidebar {
+    grid-area: sidebar;
+    background: rgba(217, 217, 217, 0.05);
+    min-width: 60px;
+    display: flex;
+    justify-content: end;
+    transition: width 0.3s;
+
+    &__Inspector {
+      background: rgba(0, 16, 24, 0.33);
+      width: 250px;
+      flex-grow: 1;
+    }
+
+    &__Icons {
+      flex-grow: 1;
+      width: 80px;
+    }
+  }
+
+  &__TopBar {
+    display: flex;
+    align-items: flex-start;
+    height: 70px;
+  }
+
+  &__Content {
+    background: rgba(0, 0, 0, 0.37);
+    flex-grow: 1;
+  }
+}

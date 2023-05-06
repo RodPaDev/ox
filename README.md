@@ -28,7 +28,6 @@ Whether you're a seasoned programmer looking to flex your low-level skills or a 
 
 From the bootloader to the kernel to the operating system and programming language, I've traded my sanity and recreated the full stack of an 8-bit computer system in your browser. With Oito Xenon, you'll have a chance to dive into the inner workings of a computer system and see how it all fits together. And who knows, you might even discover a newfound appreciation for modern computing (tbh, I doubt it).
 
-
 ## Bootloader & Kernel
 
 The Oito Operating Personal System (OOPS) is built upon a sophisticated bootloader and kernel architecture that utilizes advanced techniques to manage system resources efficiently. The bootloader, written in low-level assembly language, employs a multistage bootstrapping process that initializes the hardware components and loads the kernel image into memory. The kernel provides a comprehensive framework for resource management, task scheduling, and memory allocation.
@@ -50,15 +49,13 @@ The Oito Operating Personal System (Oops) is a bare-bones operating system that'
 - A utility for loading and executing programs from cartridges, so you can finally feel like a real programmer
 - Games like Gravity Tetrominos, Serpent, Ponger, and Cosmic Invasion (or other non-infringing names). I'm not trying to get sued here, after all.
 
-
 ## OitoLang
 
 OitoLang is the programming language you need for the OitoBit 8-bit virtual CPU. It's simple enough for even a stupid little monkey like you to use. With ownership and borrowing support, OitoLang keeps you from making the usual intern-vibe mistakes that would cause you to shoot yourself in the foot and blow your leg off.
 
-I decided to skip Object-Oriented Programming (OOP) just the thought of adding support for OOP makes me sweat like a nervous freshman on the first day of high school. OOP can be complicated and overwhelming, and frankly, I don't have the time or patience for it. 
+I decided to skip Object-Oriented Programming (OOP) just the thought of adding support for OOP makes me sweat like a nervous freshman on the first day of high school. OOP can be complicated and overwhelming, and frankly, I don't have the time or patience for it.
 
 I prefer to stick with a functional and procedural programming paradigm that's easy to use and understand. So if you're looking for a programming language that will give you nightmares, look no further because OitoLang is no exception.
-
 
 ## OitoTools
 
@@ -66,3 +63,40 @@ I prefer to stick with a functional and procedural programming paradigm that's e
 - OitoLang Compiler
 - OitoLinker
 - OitoLang Server
+
+---
+
+## Usage
+
+Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+
+This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+
+```bash
+$ npm install # or pnpm install or yarn install
+```
+
+### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+
+## Available Scripts
+
+In the project directory, you can run:
+
+### `npm dev` or `npm start`
+
+Runs the app in the development mode.<br>
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+The page will reload if you make edits.<br>
+
+### `npm run build`
+
+Builds the app for production to the `dist` folder.<br>
+It correctly bundles Solid in production mode and optimizes the build for the best performance.
+
+The build is minified and the filenames include the hashes.<br>
+Your app is ready to be deployed!
+
+## Deployment
+
+You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { createEffect, createSignal, onCleanup } from 'solid-js'
 
 const RENDER_WIDTH = 256
 const RENDER_HEIGHT = 240
@@ -66,12 +66,12 @@ const calcScaledRender = (scale: number, width: number, height: number) => ({
 })
 
 export default function Display() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const offscreenCanvasRef = useRef(new OffscreenCanvas(256, 240))
+  const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement | null>(null)
+  const offscreenCanvasRef = new OffscreenCanvas(256, 240)
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    const offscreenCanvas = offscreenCanvasRef.current
+  createEffect(() => {
+    const canvas = canvasRef()
+    const offscreenCanvas = offscreenCanvasRef
 
     // Define your screen buffer and palette here
     const screenBuffer = new Uint8Array(RENDER_WIDTH * RENDER_HEIGHT)
@@ -103,16 +103,20 @@ export default function Display() {
         ctx.font = `${10 * RENDER_SCALE}px monospace`
         const text = 'Hello, World!'
         const textWidth = ctx.measureText(text).width
-        const x = (width - textWidth) / 2
-        const y = height / 2
+        const x = (canvas.width - textWidth) / 2
+        const y = canvas.height / 2
         ctx.fillText(text, x, y)
 
         requestAnimationFrame(animationLoop)
       }
 
-      requestAnimationFrame(animationLoop)
+      const animationId = requestAnimationFrame(animationLoop)
+
+      onCleanup(() => {
+        cancelAnimationFrame(animationId)
+      })
     }
-  }, [])
+  })
 
   const { width, height } = calcScaledRender(
     RENDER_SCALE,
@@ -120,5 +124,5 @@ export default function Display() {
     RENDER_HEIGHT
   )
 
-  return <canvas ref={canvasRef} width={width} height={height} />
+  return <canvas ref={setCanvasRef} width={width} height={height} />
 }
